@@ -336,7 +336,7 @@ class Mailbox(models.Model):
                 msg.get_payload(decode=True).decode(content_charset)
             except LookupError:
                 logger.warning(
-                    "Unknown encoding %s; interpreting as ASCII!"
+                    "Unknown encoding %s; interpreting as ASCII!" % content_charset
                 )
                 msg.set_payload(
                     msg.get_payload(decode=True).decode(
@@ -346,11 +346,11 @@ class Mailbox(models.Model):
                 )
             except ValueError:
                 logger.warning(
-                    "Decoding error encountered; interpreting as ASCII!"
+                    "Decoding error encountered; interpreting as ASCII!" & content_charset
                 )
                 msg.set_payload(
                     msg.get_payload(decode=True).decode(
-                        content_charset,
+                        'ascii',
                         'ignore'
                     )
                 )
@@ -360,7 +360,7 @@ class Mailbox(models.Model):
     def _process_message(self, message):
         msg = Message()
         if STORE_ORIGINAL_MESSAGE:
-            msg.eml.save('%s.eml' % uuid.uuid4(), ContentFile(message), save=False)
+            msg.eml.save('%s.eml' % uuid.uuid4(), ContentFile(message.as_string(unixfrom=True)), save=False)
         msg.mailbox = self
         if 'subject' in message:
             msg.subject = convert_header_to_unicode(message['subject'])[0:255]
